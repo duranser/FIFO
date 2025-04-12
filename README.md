@@ -1,1 +1,2 @@
-### Synthesizable Block RAM-based FIFO for Xilinx FPGAs.
+# FIFO
+* Synthesizable Block RAM-based FIFO for Xilinx FPGAs.
