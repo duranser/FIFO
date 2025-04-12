@@ -30,8 +30,8 @@ module FIFO_tb;
 		.write(write),
 		.read(read),
 		.data_in(data_in), 
-		.empty_flag(empty), 
-		.full_flag(full), 
+		.empty(empty), 
+		.full(full), 
 		.data_out(data_out)	
 	);
 	
@@ -47,7 +47,6 @@ module FIFO_tb;
 
 		write   = 1;
 		read    = 0;
-        #(CLK_PRD);
 
 		for( i=1; i<33; i=i+1)
 		begin
@@ -65,13 +64,6 @@ module FIFO_tb;
 			$display("%d", data_out);
 		    #(CLK_PRD);
 		end		
-
-
-		#(CLK_PRD);
-		rst = 1;
-		#(CLK_PRD);
-		rst = 0;
-		#(CLK_PRD);		
 		
 		write   = 1;
 		read    = 1;
