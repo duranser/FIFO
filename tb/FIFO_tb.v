@@ -3,24 +3,26 @@
 
 
 module FIFO_tb;
-	parameter DATA_WITH   = 16,
+	parameter DATA_WIDTH  = 16,
 	          DATA_DEPTH  = 32;
 
 	reg  clk   = 0; 
 	reg  rst   = 0;
 	reg  write = 0;							// write request
 	reg  read  = 0;							// read  request
-	reg  [DATA_WITH-1:0] data_in = 0;		// input data
+	reg  [DATA_WIDTH-1:0] data_in = 0;		// input data
 	wire empty;								// empty flag
 	wire full;								// full  flag
-	wire [DATA_WITH-1:0] data_out;			// data  out
+	wire [DATA_WIDTH-1:0] data_out;			// data  out
 
 
-	always #10 clk <= ~clk;
+    parameter CLK_PRD = 10;
+    
+	always #(CLK_PRD/2) clk <= ~clk;
 
 
 	FIFO #(
-		.DATA_WITH (DATA_WITH),
+		.DATA_WIDTH(DATA_WIDTH),
 		.DATA_DEPTH(DATA_DEPTH)
 	)FIFO(
 		.clk(clk), 
@@ -37,30 +39,48 @@ module FIFO_tb;
 	
 	initial
 	begin
-		repeat(50) @(posedge clk);
+		#(100*CLK_PRD);
 		rst = 1;
-		repeat(50) @(posedge clk);
+		#(20*CLK_PRD);
 		rst = 0;
-		repeat(50) @(posedge clk);
-        
+		#(100*CLK_PRD);
+
 		write   = 1;
 		read    = 0;
+        #(CLK_PRD);
+
 		for( i=1; i<33; i=i+1)
 		begin
 			data_in = i;
 			$display("%d", data_out);
-			@(posedge clk);
+		    #(CLK_PRD);
 		end			
-		write   = 0;
 
-		@(posedge clk);
 		write   = 0;
 		read    = 1;
+
 		for( i=1; i<33; i=i+1)
 		begin
 			data_in = i;
 			$display("%d", data_out);
-			@(posedge clk);
+		    #(CLK_PRD);
+		end		
+
+
+		#(CLK_PRD);
+		rst = 1;
+		#(CLK_PRD);
+		rst = 0;
+		#(CLK_PRD);		
+		
+		write   = 1;
+		read    = 1;
+
+		for( i=1; i<33; i=i+1)
+		begin
+			data_in = i;
+			$display("%d", data_out);
+		    #(CLK_PRD);
 		end		
 	end
 endmodule

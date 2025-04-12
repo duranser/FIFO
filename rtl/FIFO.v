@@ -3,36 +3,38 @@
 
 
 module FIFO #(
-	parameter DATA_WITH   = 16,
-	parameter DATA_DEPTH  = 1024
+	parameter DATA_WIDTH  = 16,
+	parameter DATA_DEPTH  = 1024         // must be power of 2
 
 )(
 	input 	clk, 
 	input   rst,
 	input   write,							// write request
 	input   read, 							// read  request
-	input   [DATA_WITH-1:0] data_in,		// input data
-	output  [DATA_WITH-1:0] data_out,		// data  out
+	input   [DATA_WIDTH-1:0] data_in,		// input data
+	output  [DATA_WIDTH-1:0] data_out,	    // data  out
 	output  reg empty_flag,					// empty flag
 	output  reg full_flag					// full  flag
 );
 
-	reg signed [$clog2(DATA_DEPTH)-1 : 0] wr_idx;	// wr index
-	reg signed [$clog2(DATA_DEPTH)-1 : 0] rd_idx;	// rd index
+	reg [$clog2(DATA_DEPTH)-1 : 0] wr_idx;	// wr index
+	reg [$clog2(DATA_DEPTH)-1 : 0] rd_idx;	// rd index
 	
-	reg wr_en;							            // write enable
-	reg [DATA_WITH-1:0] data_wr;                    // data to be written
-    reg empty;                                      // empty flag register
-    reg full;                                       // full flag register
+	reg  wr_en;							    // write enable
+	reg  rd_en;                             // read enable
+	reg  [DATA_WIDTH-1:0] data_wr;          // data to be written
+    reg  empty;                             // empty flag register
+    reg  full;                              // full flag register
 
 
+    
 	bram_dual_one_clk #(
-	   .DATA_WITH(DATA_WITH),
+	   .DATA_WIDTH(DATA_WIDTH),
 	   .DATA_DEPTH(DATA_DEPTH)
 	) BRAM(
 		.clk(clk), 
 		.ena(1'b1), 
-		.enb(1'b1),
+		.enb(rd_en),
 		.wea(wr_en),
 		.addra(wr_idx), 
 		.addrb(rd_idx), 
@@ -67,6 +69,7 @@ module FIFO #(
 			wr_idx    <= 0;
 			rd_idx    <= 0;
 			wr_en     <= 0;
+			rd_en     <= 0;
 			data_wr   <= 0;
 		end
 		else
@@ -75,9 +78,9 @@ module FIFO #(
 			if( write && ~full )
 			begin
 				wr_en   <= 1'b1;
-				wr_idx  <= wr_idx + 1;
+				wr_idx  <= wr_idx + 1'b1;
 				data_wr <= data_in;
-				if( ( wr_idx == rd_idx-1 ) && ~read )  
+				if( ( wr_idx+1'b1 == rd_idx ) && ~read )  
 					full  <= 1'b1;
 				else
 					empty <= 1'b0;                  
@@ -91,11 +94,16 @@ module FIFO #(
 			// Read Operation:			
 			if( read && ~empty )
 			begin
-				rd_idx  <= rd_idx + 1;
-				if( ( wr_idx-1 == rd_idx ) && ~write  )
+			    rd_en   <= 1'b1;
+				rd_idx  <= rd_idx + 1'b1;
+				if( ( wr_idx == rd_idx+1'b1 ) && ~write  )
 					empty   <= 1'b1;
 				else
 					full    <= 1'b0;
+			end
+			else
+			begin			
+			    rd_en   <= 1'b0;
 			end
 		end
 	end
